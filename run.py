@@ -1,7 +1,9 @@
 import pymysql
 import pandas as pd
+from tabulate import tabulate
 
 data = pd.read_csv("data.csv", encoding='utf-8')
+
 
 # Problem 1 (5 pt.)
 def initialize_database():
@@ -40,7 +42,7 @@ def initialize_database():
     sql6 = "INSERT INTO movie(title, director, price) VALUES (%s, %s, %s);"
     sql7 = "INSERT INTO audience(name, age) VALUES(%s, %s);"
     sql8 = "INSERT INTO mov_aud(mov_id, aud_id) VALUES (%s, %s)"
-    sql10 = "SELECT * FROM mov_aud"
+    sql10 = "SELECT * FROM movie"
 
     with conn:
         with conn.cursor() as cur:
@@ -59,8 +61,8 @@ def initialize_database():
             for idx in range(len(data)):
                 movieData.append([data.values[idx][0], data.values[idx][1], data.values[idx][2]])
                 audienceData.append([data.values[idx][3], data.values[idx][4]])
-                #cur.execute(sql6, (data.values[idx][0], data.values[idx][1], data.values[idx][2]))
-                #cur.execute(sql7, (data.values[idx][3], data.values[idx][4]))
+                # cur.execute(sql6, (data.values[idx][0], data.values[idx][1], data.values[idx][2]))
+                # cur.execute(sql7, (data.values[idx][3], data.values[idx][4]))
 
             for value in movieData:
                 if value not in movieList:
@@ -77,26 +79,18 @@ def initialize_database():
                 cur.execute(sql7, (value[0], value[1]))
 
             for idx in range(len(data)):
-                print(movieList.index([data.values[idx][0], data.values[idx][1], data.values[idx][2]]))
-
-                print(audienceList.index([data.values[idx][3], data.values[idx][4]]))
-                cur.execute(sql8, (movieList.index([data.values[idx][0], data.values[idx][1], data.values[idx][2]])+1,
-                                   audienceList.index([data.values[idx][3], data.values[idx][4]])+1))
-
-
+                cur.execute(sql8, (movieList.index([data.values[idx][0], data.values[idx][1], data.values[idx][2]]) + 1,
+                                   audienceList.index([data.values[idx][3], data.values[idx][4]]) + 1))
 
             cur.execute(sql10)
             for result in cur:
                 print(result)
             conn.commit()
 
-
-
-
-
     print('Database successfully initialized')
     # YOUR CODE GOES HERE
     pass
+
 
 # Problem 15 (5 pt.)
 def reset():
@@ -105,28 +99,51 @@ def reset():
     # YOUR CODE GOES HERE
     pass
 
+
 # Problem 2 (4 pt.)
 def print_movies():
     # YOUR CODE GOES HERE
+    conn = pymysql.connect(
+        host='localhost',
+        port=3306,
+        user='root',
+        passwd='password',
+        db='movieDB',
+        charset='utf8'
+    )
+    sql0 = """SELECT movie.id, movie.title, movie.director, ROUND(AVG(movie.price))
+            FROM movie, audience
+            GROUP BY movie.id
+    """
+    with conn.cursor() as cur:
+        cur.execute(sql0)
+        results = cur.fetchall()
+    conn.commit()
 
-    
+    table = [["id", "title", "director", "price"]]
+    for result in results:
+        table.append(list(result))
+    print(tabulate(table, headers='firstrow', tablefmt='psql'))
+
+
     # YOUR CODE GOES HERE
     pass
+
 
 # Problem 3 (4 pt.)
 def print_users():
     # YOUR CODE GOES HERE
 
-    
     # YOUR CODE GOES HERE
     pass
+
 
 # Problem 4 (4 pt.)
 def insert_movie():
     # YOUR CODE GOES HERE
     title = input('Movie title: ')
     director = input('Movie director: ')
-    
+
     # error message
     print(f'Movie {title} already exists')
     print('Movie price should be from 0 to 100000')
@@ -136,11 +153,11 @@ def insert_movie():
     # YOUR CODE GOES HERE
     pass
 
+
 # Problem 6 (4 pt.)
 def remove_movie():
     # YOUR CODE GOES HERE
     movie_id = input('Movie ID: ')
-
 
     # error message
     print(f'Movie {movie_id} does not exist')
@@ -150,27 +167,27 @@ def remove_movie():
     # YOUR CODE GOES HERE
     pass
 
+
 # Problem 5 (4 pt.)
 def insert_user():
     # YOUR CODE GOES HERE
     name = input('User name: ')
     age = input('User age: ')
-    
 
     # error message
     print('User age should be from 12 to 110')
     print(f'User ({name}, {age}) already exists')
-    
+
     # success message
     print('One user successfully inserted')
     # YOUR CODE GOES HERE
     pass
 
+
 # Problem 7 (4 pt.)
 def remove_user():
     # YOUR CODE GOES HERE
     user_id = input('User ID: ')
-
 
     # error message
     print(f'User {user_id} does not exist')
@@ -180,12 +197,12 @@ def remove_user():
     # YOUR CODE GOES HERE
     pass
 
+
 # Problem 8 (5 pt.)
 def book_movie():
     # YOUR CODE GOES HERE
     movie_id = input('Movie ID: ')
     user_id = input('User ID: ')
-
 
     # error message
     print(f'Movie {movie_id} does not exist')
@@ -198,13 +215,13 @@ def book_movie():
     # YOUR CODE GOES HERE
     pass
 
+
 # Problem 9 (5 pt.)
 def rate_movie():
     # YOUR CODE GOES HERE
     movie_id = input('Movie ID: ')
     user_id = input('User ID: ')
     rating = input('Ratings (1~5): ')
-
 
     # error message
     print(f'Movie {movie_id} does not exist')
@@ -218,12 +235,12 @@ def rate_movie():
     # YOUR CODE GOES HERE
     pass
 
+
 # Problem 10 (5 pt.)
 def print_users_for_movie():
     # YOUR CODE GOES HERE
     user_id = input('User ID: ')
 
-    
     # error message
     print(f'User {user_id} does not exist')
     # YOUR CODE GOES HERE
@@ -235,17 +252,16 @@ def print_movies_for_user():
     # YOUR CODE GOES HERE
     user_id = input('User ID: ')
 
-
     # error message
     print(f'User {user_id} does not exist')
     # YOUR CODE GOES HERE
     pass
 
+
 # Problem 12 (6 pt.)
 def recommend_popularity():
     # YOUR CODE GOES HERE
     user_id = input('User ID: ')
-
 
     # error message
     print(f'User {user_id} does not exist')
@@ -258,7 +274,6 @@ def recommend_item_based():
     # YOUR CODE GOES HERE
     user_id = input('User ID: ')
     rec_count = input('Recommend Count: ')
-
 
     # error message
     print(f'User {user_id} does not exist')
