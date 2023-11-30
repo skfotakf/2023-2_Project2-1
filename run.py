@@ -4,17 +4,18 @@ from tabulate import tabulate
 
 data = pd.read_csv("data.csv", encoding='utf-8')
 
-
-# Problem 1 (5 pt.)
-def initialize_database():
-    # YOUR CODE GOES HERE
-    conn = pymysql.connect(
+conn = pymysql.connect(
         host='localhost',
         port=3306,
         user='root',
         passwd='password',
+        db='movieDB',
         charset='utf8'
     )
+# Problem 1 (5 pt.)
+def initialize_database():
+    # YOUR CODE GOES HERE
+
 
     sql0 = "DROP DATABASE movieDB"
     sql1 = "CREATE DATABASE movieDB"
@@ -44,48 +45,47 @@ def initialize_database():
     sql8 = "INSERT INTO mov_aud(mov_id, aud_id) VALUES (%s, %s)"
     sql10 = "SELECT * FROM movie"
 
-    with conn:
-        with conn.cursor() as cur:
-            cur.execute(sql0)
-            cur.execute(sql1)
-            cur.execute(sql2)
-            cur.execute(sql3)
-            cur.execute(sql4)
-            cur.execute(sql5)
 
-            movieData = []
-            audienceData = []
-            movieList = []
-            audienceList = []
+    with conn.cursor() as cur:
+        cur.execute(sql0)
+        cur.execute(sql1)
+        cur.execute(sql2)
+        cur.execute(sql3)
+        cur.execute(sql4)
+        cur.execute(sql5)
 
-            for idx in range(len(data)):
-                movieData.append([data.values[idx][0], data.values[idx][1], data.values[idx][2]])
-                audienceData.append([data.values[idx][3], data.values[idx][4]])
-                # cur.execute(sql6, (data.values[idx][0], data.values[idx][1], data.values[idx][2]))
-                # cur.execute(sql7, (data.values[idx][3], data.values[idx][4]))
+        movieData = []
+        audienceData = []
+        movieList = []
+        audienceList = []
 
-            for value in movieData:
-                if value not in movieList:
-                    movieList.append(value)
+        for idx in range(len(data)):
+            movieData.append([data.values[idx][0], data.values[idx][1], data.values[idx][2]])
+            audienceData.append([data.values[idx][3], data.values[idx][4]])
+            # cur.execute(sql6, (data.values[idx][0], data.values[idx][1], data.values[idx][2]))
+            # cur.execute(sql7, (data.values[idx][3], data.values[idx][4]))
 
-            for value in audienceData:
-                if value not in audienceList:
-                    audienceList.append(value)
+        for value in movieData:
+            if value not in movieList:
+                movieList.append(value)
 
-            for value in movieList:
-                cur.execute(sql6, (value[0], value[1], value[2]))
+        for value in audienceData:
+            if value not in audienceList:
+                audienceList.append(value)
 
-            for value in audienceList:
-                cur.execute(sql7, (value[0], value[1]))
+        for value in movieList:
+            cur.execute(sql6, (value[0], value[1], value[2]))
 
-            for idx in range(len(data)):
-                cur.execute(sql8, (movieList.index([data.values[idx][0], data.values[idx][1], data.values[idx][2]]) + 1,
-                                   audienceList.index([data.values[idx][3], data.values[idx][4]]) + 1))
+        for value in audienceList:
+            cur.execute(sql7, (value[0], value[1]))
 
-            cur.execute(sql10)
-            for result in cur:
-                print(result)
-            conn.commit()
+        for idx in range(len(data)):
+            cur.execute(sql8, (movieList.index([data.values[idx][0], data.values[idx][1], data.values[idx][2]]) + 1,
+                               audienceList.index([data.values[idx][3], data.values[idx][4]]) + 1))
+
+        cur.execute(sql10)
+        for result in cur:
+            print(result)
 
     print('Database successfully initialized')
     # YOUR CODE GOES HERE
@@ -103,25 +103,17 @@ def reset():
 # Problem 2 (4 pt.)
 def print_movies():
     # YOUR CODE GOES HERE
-    conn = pymysql.connect(
-        host='localhost',
-        port=3306,
-        user='root',
-        passwd='password',
-        db='movieDB',
-        charset='utf8'
-    )
-    sql0 = """SELECT movie.id, movie.title, movie.director, ROUND(AVG(movie.price)), COUNT(mov_aud.mov_id)
-            FROM movie, mov_aud
-            where movie.id = mov_aud.mov_id
+    sql1 = """SELECT movie.id, movie.title, movie.director, ROUND(AVG(movie.price)), COUNT(mov_aud.mov_id)
+            FROM movie
+            LEFT JOIN mov_aud on movie.id = mov_aud.mov_id
             GROUP BY movie.id
     """
     with conn.cursor() as cur:
-        cur.execute(sql0)
+        cur.execute(sql1)
         results = cur.fetchall()
     conn.commit()
 
-    table = [["id", "title", "director", "price"]]
+    table = [["id", "title", "director", "price", "count"]]
     for result in results:
         table.append(list(result))
     print(tabulate(table, headers='firstrow', tablefmt='psql'))
@@ -133,6 +125,17 @@ def print_movies():
 # Problem 3 (4 pt.)
 def print_users():
     # YOUR CODE GOES HERE
+    sql1 = "SELECT id, name, age FROM audience"
+
+    with conn.cursor() as cur:
+        cur.execute(sql1)
+        results = cur.fetchall()
+    conn.commit()
+
+    table = [["id", "name", "age"]]
+    for result in results:
+        table.append(list(result))
+    print(tabulate(table, headers='firstrow', tablefmt='psql'))
 
     # YOUR CODE GOES HERE
     pass
@@ -143,6 +146,13 @@ def insert_movie():
     # YOUR CODE GOES HERE
     title = input('Movie title: ')
     director = input('Movie director: ')
+    price = input('Movie price: ')
+
+    sql1 = "INSERT INTO movie(title, director, price) VALUES(%s, %s, %s)"
+
+    with conn.cursor() as cur:
+        cur.execute(sql1, (title, director, price))
+    conn.commit()
 
     # error message
     print(f'Movie {title} already exists')
