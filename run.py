@@ -14,15 +14,32 @@ def initialize_database():
         charset='utf8'
     )
 
-    sql0 = "DROP DATABASE movie"
-    sql1 = "CREATE DATABASE movie"
-    sql2 = "SHOW DATABASES"
+    sql0 = "DROP DATABASE movieDB"
+    sql1 = "CREATE DATABASE movieDB"
+    sql2 = "USE movieDB"
+    sql3 = """CREATE TABLE movie (
+            id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY, 
+            title char(255) NOT NULL UNIQUE KEY,
+            director char(255) NOT NULL,
+            price int(11) NOT NULL
+    )
+    """
+    sql4 = """create table audience (
+        id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        name varchar(255) NOT NULL UNIQUE KEY,
+        age int(11) NOT NULL
+    )
+    """
+    sql5 = "desc audience"
 
     with conn:
         with conn.cursor() as cur:
             cur.execute(sql0)
             cur.execute(sql1)
             cur.execute(sql2)
+            cur.execute(sql3)
+            cur.execute(sql4)
+            cur.execute(sql5)
             for data in cur:
                 print(data)
             conn.commit()
