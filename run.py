@@ -22,9 +22,9 @@ def initialize_database():
     sql2 = "USE movieDB"
     sql3 = """CREATE TABLE movie (
             id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY, 
-            title varchar(255) NOT NULL,
+            title varchar(255) NOT NULL UNIQUE KEY,
             director varchar(255) NOT NULL,
-            price int(11) NOT NULL
+            price int(11) NOT NULL CHECK (price >=0 AND price <= 100000 )
     )
     """
     sql4 = """create table audience (
@@ -150,18 +150,19 @@ def insert_movie():
 
     sql1 = "INSERT INTO movie(title, director, price) VALUES(%s, %s, %s)"
 
-    with conn.cursor() as cur:
-        cur.execute(sql1, (title, director, price))
-    conn.commit()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql1, (title, director, price))
+        conn.commit()
 
-    # error message
-    print(f'Movie {title} already exists')
-    print('Movie price should be from 0 to 100000')
+        print('One movie successfully inserted')
+        # YOUR CODE GOES HERE
+        pass
+    except pymysql.err.IntegrityError:
+        print(f'Movie {title} already exists')
+    except pymysql.err.OperationalError:
+        print('Movie price should be from 0 to 100000')
 
-    # success message
-    print('One movie successfully inserted')
-    # YOUR CODE GOES HERE
-    pass
 
 
 # Problem 6 (4 pt.)
