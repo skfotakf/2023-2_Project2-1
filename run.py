@@ -30,7 +30,14 @@ def initialize_database():
         age int(11) NOT NULL
     )
     """
-    sql5 = "desc audience"
+    sql5 = """create table mov_aud(
+        mov_id int(11) NOT NULL,
+        aud_id int(11) NOT NULL,
+        FOREIGN KEY (mov_id) REFERENCES movie(id),
+        FOREIGN KEY (aud_id) REFERENCES audience(id)
+    )
+    """
+    sql6 = "desc mov_aud"
 
     with conn:
         with conn.cursor() as cur:
@@ -40,6 +47,7 @@ def initialize_database():
             cur.execute(sql3)
             cur.execute(sql4)
             cur.execute(sql5)
+            cur.execute(sql6)
             for data in cur:
                 print(data)
             conn.commit()
