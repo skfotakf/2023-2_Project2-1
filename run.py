@@ -19,14 +19,14 @@ def initialize_database():
     sql2 = "USE movieDB"
     sql3 = """CREATE TABLE movie (
             id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY, 
-            title char(255) NOT NULL UNIQUE KEY,
-            director char(255) NOT NULL,
+            title varchar(255) NOT NULL,
+            director varchar(255) NOT NULL,
             price int(11) NOT NULL
     )
     """
     sql4 = """create table audience (
         id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        name varchar(255) NOT NULL UNIQUE KEY,
+        name varchar(255) NOT NULL,
         age int(11) NOT NULL
     )
     """
@@ -37,7 +37,10 @@ def initialize_database():
         FOREIGN KEY (aud_id) REFERENCES audience(id)
     )
     """
-    sql6 = "desc mov_aud"
+    sql6 = "INSERT INTO movie(title, director, price) VALUES (%s, %s, %s);"
+    sql7 = "INSERT INTO audience(name, age) VALUES(%s, %s);"
+    sql8 = "INSERT INTO mov_aud(mov_id, aud_id) VALUES (%s, %s)"
+    sql10 = "SELECT * FROM mov_aud"
 
     with conn:
         with conn.cursor() as cur:
@@ -47,9 +50,44 @@ def initialize_database():
             cur.execute(sql3)
             cur.execute(sql4)
             cur.execute(sql5)
-            cur.execute(sql6)
-            for data in cur:
-                print(data)
+
+            movieData = []
+            audienceData = []
+            movieList = []
+            audienceList = []
+
+            for idx in range(len(data)):
+                movieData.append([data.values[idx][0], data.values[idx][1], data.values[idx][2]])
+                audienceData.append([data.values[idx][3], data.values[idx][4]])
+                #cur.execute(sql6, (data.values[idx][0], data.values[idx][1], data.values[idx][2]))
+                #cur.execute(sql7, (data.values[idx][3], data.values[idx][4]))
+
+            for value in movieData:
+                if value not in movieList:
+                    movieList.append(value)
+
+            for value in audienceData:
+                if value not in audienceList:
+                    audienceList.append(value)
+
+            for value in movieList:
+                cur.execute(sql6, (value[0], value[1], value[2]))
+
+            for value in audienceList:
+                cur.execute(sql7, (value[0], value[1]))
+
+            for idx in range(len(data)):
+                print(movieList.index([data.values[idx][0], data.values[idx][1], data.values[idx][2]]))
+
+                print(audienceList.index([data.values[idx][3], data.values[idx][4]]))
+                cur.execute(sql8, (movieList.index([data.values[idx][0], data.values[idx][1], data.values[idx][2]])+1,
+                                   audienceList.index([data.values[idx][3], data.values[idx][4]])+1))
+
+
+
+            cur.execute(sql10)
+            for result in cur:
+                print(result)
             conn.commit()
 
 
