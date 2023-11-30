@@ -24,13 +24,14 @@ def initialize_database():
             id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY, 
             title varchar(255) NOT NULL UNIQUE KEY,
             director varchar(255) NOT NULL,
-            price int(11) NOT NULL CHECK (price >=0 AND price <= 100000 )
+            price int(11) NOT NULL CHECK (price >= 0 AND price <= 100000 )
     )
     """
     sql4 = """create table audience (
         id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
         name varchar(255) NOT NULL,
-        age int(11) NOT NULL
+        age int(11) NOT NULL CHECK (age >= 12 AND age <= 110 ),
+        UNIQUE(name, age)
     )
     """
     sql5 = """create table mov_aud(
@@ -125,7 +126,7 @@ def print_movies():
 # Problem 3 (4 pt.)
 def print_users():
     # YOUR CODE GOES HERE
-    sql1 = "SELECT id, name, age FROM audience"
+    sql1 = "SELECT id, name, age FROM audience ORDER BY id"
 
     with conn.cursor() as cur:
         cur.execute(sql1)
@@ -185,14 +186,24 @@ def insert_user():
     name = input('User name: ')
     age = input('User age: ')
 
-    # error message
-    print('User age should be from 12 to 110')
-    print(f'User ({name}, {age}) already exists')
+    sql1 = "INSERT INTO audience(name, age) VALUES(%s, %s)"
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql1, (name, age))
+        conn.commit()
+
+        print('One user successfully inserted')
+        # YOUR CODE GOES HERE
+        pass
+    except pymysql.err.IntegrityError:
+        print(f'User ({name}, {age}) already exists')
+    except pymysql.err.OperationalError:
+        print('User age should be from 12 to 110')
+
 
     # success message
-    print('One user successfully inserted')
-    # YOUR CODE GOES HERE
-    pass
+
 
 
 # Problem 7 (4 pt.)
