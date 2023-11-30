@@ -111,8 +111,9 @@ def print_movies():
         db='movieDB',
         charset='utf8'
     )
-    sql0 = """SELECT movie.id, movie.title, movie.director, ROUND(AVG(movie.price))
-            FROM movie, audience
+    sql0 = """SELECT movie.id, movie.title, movie.director, ROUND(AVG(movie.price)), COUNT(mov_aud.mov_id)
+            FROM movie, mov_aud
+            where movie.id = mov_aud.mov_id
             GROUP BY movie.id
     """
     with conn.cursor() as cur:
@@ -124,7 +125,6 @@ def print_movies():
     for result in results:
         table.append(list(result))
     print(tabulate(table, headers='firstrow', tablefmt='psql'))
-
 
     # YOUR CODE GOES HERE
     pass
