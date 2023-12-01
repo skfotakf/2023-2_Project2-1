@@ -27,23 +27,23 @@ def initialize_database():
             price int(11) NOT NULL CHECK (price >= 0 AND price <= 100000 )
     )
     """
-    sql4 = """create table audience (
+    sql4 = """create table user (
         id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
         name varchar(255) NOT NULL,
         age int(11) NOT NULL CHECK (age >= 12 AND age <= 110 ),
         UNIQUE(name, age)
     )
     """
-    sql5 = """create table mov_aud(
+    sql5 = """create table mov_user(
         mov_id int(11) NOT NULL,
-        aud_id int(11) NOT NULL,
+        user_id int(11) NOT NULL,
         FOREIGN KEY (mov_id) REFERENCES movie(id),
-        FOREIGN KEY (aud_id) REFERENCES audience(id)
+        FOREIGN KEY (user_id) REFERENCES user(id)
     )
     """
     sql6 = "INSERT INTO movie(title, director, price) VALUES (%s, %s, %s);"
-    sql7 = "INSERT INTO audience(name, age) VALUES(%s, %s);"
-    sql8 = "INSERT INTO mov_aud(mov_id, aud_id) VALUES (%s, %s)"
+    sql7 = "INSERT INTO user(name, age) VALUES(%s, %s);"
+    sql8 = "INSERT INTO mov_user(mov_id, user_id) VALUES (%s, %s)"
     sql10 = "SELECT * FROM movie"
 
 
@@ -56,13 +56,13 @@ def initialize_database():
         cur.execute(sql5)
 
         movieData = []
-        audienceData = []
+        userData = []
         movieList = []
-        audienceList = []
+        userList = []
 
         for idx in range(len(data)):
             movieData.append([data.values[idx][0], data.values[idx][1], data.values[idx][2]])
-            audienceData.append([data.values[idx][3], data.values[idx][4]])
+            userData.append([data.values[idx][3], data.values[idx][4]])
             # cur.execute(sql6, (data.values[idx][0], data.values[idx][1], data.values[idx][2]))
             # cur.execute(sql7, (data.values[idx][3], data.values[idx][4]))
 
@@ -70,19 +70,19 @@ def initialize_database():
             if value not in movieList:
                 movieList.append(value)
 
-        for value in audienceData:
-            if value not in audienceList:
-                audienceList.append(value)
+        for value in userData:
+            if value not in userList:
+                userList.append(value)
 
         for value in movieList:
             cur.execute(sql6, (value[0], value[1], value[2]))
 
-        for value in audienceList:
+        for value in userList:
             cur.execute(sql7, (value[0], value[1]))
 
         for idx in range(len(data)):
             cur.execute(sql8, (movieList.index([data.values[idx][0], data.values[idx][1], data.values[idx][2]]) + 1,
-                               audienceList.index([data.values[idx][3], data.values[idx][4]]) + 1))
+                               userList.index([data.values[idx][3], data.values[idx][4]]) + 1))
 
         cur.execute(sql10)
         for result in cur:
@@ -104,9 +104,9 @@ def reset():
 # Problem 2 (4 pt.)
 def print_movies():
     # YOUR CODE GOES HERE
-    sql1 = """SELECT movie.id, movie.title, movie.director, ROUND(AVG(movie.price)), COUNT(mov_aud.mov_id)
+    sql1 = """SELECT movie.id, movie.title, movie.director, ROUND(AVG(movie.price)), COUNT(mov_user.mov_id)
             FROM movie
-            LEFT JOIN mov_aud on movie.id = mov_aud.mov_id
+            LEFT JOIN mov_user on movie.id = mov_user.mov_id
             GROUP BY movie.id
     """
     with conn.cursor() as cur:
@@ -126,7 +126,7 @@ def print_movies():
 # Problem 3 (4 pt.)
 def print_users():
     # YOUR CODE GOES HERE
-    sql1 = "SELECT id, name, age FROM audience ORDER BY id"
+    sql1 = "SELECT id, name, age FROM user ORDER BY id"
 
     with conn.cursor() as cur:
         cur.execute(sql1)
@@ -172,7 +172,7 @@ def remove_movie():
     movie_id = input('Movie ID: ')
 
     sql0 = "SELECT id from movie where id = %s"
-    sql1 = "DELETE FROM mov_aud where mov_id = %s"
+    sql1 = "DELETE FROM mov_user where mov_id = %s"
     sql2 = "DELETE FROM movie where id = %s"
 
 
@@ -186,13 +186,6 @@ def remove_movie():
             print('One movie successfully removed')
     conn.commit()
 
-
-
-
-    # error message
-
-
-    # success message
     # YOUR CODE GOES HERE
     pass
 
@@ -203,7 +196,7 @@ def insert_user():
     name = input('User name: ')
     age = input('User age: ')
 
-    sql1 = "INSERT INTO audience(name, age) VALUES(%s, %s)"
+    sql1 = "INSERT INTO user(name, age) VALUES(%s, %s)"
 
     try:
         with conn.cursor() as cur:
@@ -226,11 +219,23 @@ def remove_user():
     # YOUR CODE GOES HERE
     user_id = input('User ID: ')
 
-    # error message
-    print(f'User {user_id} does not exist')
+    sql0 = "SELECT id from user where id = %s"
+    sql1 = "DELETE FROM mov_user where user_id = %s"
+    sql2 = "DELETE FROM user where id = %s"
 
-    # success message
-    print('One user successfully removed')
+    with conn.cursor() as cur:
+        cur.execute(sql0, user_id)
+        if cur.fetchone() is None:
+            # error message
+            print(f'User {user_id} does not exist')
+        else:
+            cur.execute(sql1, user_id)
+            cur.execute(sql2, user_id)
+            # success message
+            print('One user successfully removed')
+    conn.commit()
+
+
     # YOUR CODE GOES HERE
     pass
 
