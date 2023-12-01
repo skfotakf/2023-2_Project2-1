@@ -157,25 +157,42 @@ def insert_movie():
         conn.commit()
 
         print('One movie successfully inserted')
-        # YOUR CODE GOES HERE
-        pass
+
+
     except pymysql.err.IntegrityError:
         print(f'Movie {title} already exists')
     except pymysql.err.OperationalError:
         print('Movie price should be from 0 to 100000')
 
-
+    pass
 
 # Problem 6 (4 pt.)
 def remove_movie():
     # YOUR CODE GOES HERE
     movie_id = input('Movie ID: ')
 
+    sql0 = "SELECT id from movie where id = %s"
+    sql1 = "DELETE FROM mov_aud where mov_id = %s"
+    sql2 = "DELETE FROM movie where id = %s"
+
+
+    with conn.cursor() as cur:
+        cur.execute(sql0, movie_id)
+        if cur.fetchone() is None:
+            print(f'Movie {movie_id} does not exist')
+        else:
+            cur.execute(sql1, movie_id)
+            cur.execute(sql2, movie_id)
+            print('One movie successfully removed')
+    conn.commit()
+
+
+
+
     # error message
-    print(f'Movie {movie_id} does not exist')
+
 
     # success message
-    print('One movie successfully removed')
     # YOUR CODE GOES HERE
     pass
 
@@ -194,16 +211,14 @@ def insert_user():
         conn.commit()
 
         print('One user successfully inserted')
-        # YOUR CODE GOES HERE
-        pass
+
     except pymysql.err.IntegrityError:
         print(f'User ({name}, {age}) already exists')
     except pymysql.err.OperationalError:
         print('User age should be from 12 to 110')
 
-
-    # success message
-
+    # YOUR CODE GOES HERE
+    pass
 
 
 # Problem 7 (4 pt.)
