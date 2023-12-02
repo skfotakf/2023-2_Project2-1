@@ -5,17 +5,18 @@ from tabulate import tabulate
 data = pd.read_csv("data.csv", encoding='utf-8')
 
 conn = pymysql.connect(
-        host='localhost',
-        port=3306,
-        user='root',
-        passwd='password',
-        db='movieDB',
-        charset='utf8'
-    )
+    host='localhost',
+    port=3306,
+    user='root',
+    passwd='password',
+    db='movieDB',
+    charset='utf8'
+)
+
+
 # Problem 1 (5 pt.)
 def initialize_database():
     # YOUR CODE GOES HERE
-
 
     sql0 = "DROP DATABASE movieDB"
     sql1 = "CREATE DATABASE movieDB"
@@ -38,14 +39,14 @@ def initialize_database():
         mov_id int(11) NOT NULL,
         user_id int(11) NOT NULL,
         FOREIGN KEY (mov_id) REFERENCES movie(id),
-        FOREIGN KEY (user_id) REFERENCES user(id)
+        FOREIGN KEY (user_id) REFERENCES user(id),
+        UNIQUE(mov_id, user_id)
     )
     """
     sql6 = "INSERT INTO movie(title, director, price) VALUES (%s, %s, %s);"
     sql7 = "INSERT INTO user(name, age) VALUES(%s, %s);"
     sql8 = "INSERT INTO mov_user(mov_id, user_id) VALUES (%s, %s)"
-    sql10 = "SELECT * FROM movie"
-
+    sql10 = "SELECT * FROM mov_user"
 
     with conn.cursor() as cur:
         cur.execute(sql0)
@@ -166,6 +167,7 @@ def insert_movie():
 
     pass
 
+
 # Problem 6 (4 pt.)
 def remove_movie():
     # YOUR CODE GOES HERE
@@ -175,15 +177,15 @@ def remove_movie():
     sql1 = "DELETE FROM mov_user where mov_id = %s"
     sql2 = "DELETE FROM movie where id = %s"
 
-
     with conn.cursor() as cur:
         cur.execute(sql0, movie_id)
         if cur.fetchone() is None:
             print(f'Movie {movie_id} does not exist')
-        else:
-            cur.execute(sql1, movie_id)
-            cur.execute(sql2, movie_id)
-            print('One movie successfully removed')
+            return
+
+        cur.execute(sql1, movie_id)
+        cur.execute(sql2, movie_id)
+        print('One movie successfully removed')
     conn.commit()
 
     # YOUR CODE GOES HERE
@@ -228,13 +230,13 @@ def remove_user():
         if cur.fetchone() is None:
             # error message
             print(f'User {user_id} does not exist')
-        else:
-            cur.execute(sql1, user_id)
-            cur.execute(sql2, user_id)
-            # success message
-            print('One user successfully removed')
-    conn.commit()
+            return
 
+        cur.execute(sql1, user_id)
+        cur.execute(sql2, user_id)
+        # success message
+        print('One user successfully removed')
+    conn.commit()
 
     # YOUR CODE GOES HERE
     pass
@@ -246,14 +248,32 @@ def book_movie():
     movie_id = input('Movie ID: ')
     user_id = input('User ID: ')
 
-    # error message
-    print(f'Movie {movie_id} does not exist')
-    print(f'User {user_id} does not exist')
-    print(f'User {user_id} already booked movie {movie_id}')
-    print(f'Movie {movie_id} has already been fully booked')
+    sql0 = "SELECT COUNT(mov_id) FROM mov_user where mov_id = %s"
+    sql1 = "INSERT INTO mov_user(mov_id, user_id) VALUES(%s, %s)"
 
-    # success message
-    print('Movie successfully booked')
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql0, movie_id)
+            if cur.fetchone()[0] == 10:
+                print(f'Movie {movie_id} has already been fully booked')
+                return
+
+            cur.execute(sql1, (movie_id, user_id))
+
+            # success message
+            print('Movie successfully booked')
+    except pymysql.err.IntegrityError as e:
+
+        # error message
+        code, msg = e.args
+        if code == 1452:
+            if "mov_id" in msg:
+                print(f'Movie {movie_id} does not exist')
+            elif "user_id" in msg:
+                print(f'User {user_id} does not exist')
+        elif code == 1062:
+            print(f'User {user_id} already booked movie {movie_id}')
+
     # YOUR CODE GOES HERE
     pass
 
@@ -324,6 +344,18 @@ def recommend_item_based():
     pass
 
 
+def print_mov_user():
+    sql10 = "SELECT * FROM mov_user"
+
+    with conn.cursor() as cur:
+        cur.execute(sql10)
+
+        for result in cur:
+            print(result)
+    conn.commit()
+    pass
+
+
 # Total of 70 pt.
 def main():
     while True:
@@ -377,6 +409,8 @@ def main():
             break
         elif menu == 15:
             reset()
+        elif menu == 16:
+            print_mov_user()
         else:
             print('Invalid action')
 
